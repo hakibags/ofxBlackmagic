@@ -81,16 +81,24 @@ bool ofxBlackmagicGrabber::setDisplayMode(BMDDisplayMode displayMode,
                                           BMDPixelFormat pixelFormat) {
     
     if (displayMode == bmdModeUnknown || !controller.selectDevice(deviceID)) {
+        ofLogError("ofxBlackmagicGrabber") << "setDisplayMode(): display mode "
+            "unknown.";
         return false;
+    }
+    
+    int displayModeIndex;
+    if (controller.getDisplayModeIndex(displayMode, displayModeIndex)) {
+        this->width = controller.getDisplayModeInfo(displayModeIndex).width;
+        this->height = controller.getDisplayModeInfo(displayModeIndex).height;
+    } else {
+        ofLogError("ofxBlackmagicGrabber") << "setDisplayMode(): display mode "
+            "not supported by this device";
     }
 
     if (!controller.startCaptureWithMode(displayMode, pixelFormat)) {
         return false;
     }
-
-    this->width = controller.getDisplayModeInfo(deviceID).width;
-    this->height = controller.getDisplayModeInfo(deviceID).height;
-
+    
     return true;
 }
 

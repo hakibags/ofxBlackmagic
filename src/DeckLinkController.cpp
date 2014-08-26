@@ -132,6 +132,22 @@ bail:
 	return result;
 }
 
+bool DeckLinkController::getDisplayModeIndex(BMDDisplayMode displayMode,
+                                             int& result) {
+    int i = 0;
+    bool found = false;
+    
+    while (i < modeList.size() && !found) {
+        if (modeList[i]->GetDisplayMode() == displayMode) {
+            result = i;
+            found = true;
+        }
+        i++;
+    }
+    
+    return i;
+}
+
 const vector<string> DeckLinkController::getDisplayModeNames()  {
 	vector<string> modeNames;
 	vector<DisplayModeInfo> modeInfos = getDisplayModeInfoList();
@@ -156,11 +172,15 @@ const DisplayModeInfo DeckLinkController::getDisplayModeInfo(int modeIndex) {
 	} else {
 		info.name = "Unknown mode";
 	}
-
+    
 	// dimensions
 	info.width = modeList[modeIndex]->GetWidth();
 	info.height = modeList[modeIndex]->GetHeight();
-
+    
+    ofLog() << "modeIndex: " << modeIndex << endl
+        << "info.width: " << info.width << endl
+        << "info.height: " << info.height << endl;
+    
 	// FPS
 	BMDTimeValue numerator;
 	BMDTimeScale denominator;
