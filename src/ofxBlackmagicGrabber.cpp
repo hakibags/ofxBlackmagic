@@ -4,8 +4,8 @@
 #define UNSET_FRAMERATE -1
 
 ofxBlackmagicGrabber::ofxBlackmagicGrabber()
-: currentPixels(bgraPix),
-  currentTexture(bgraTex) {
+: currentPixels(yuvPix),
+  currentTexture(yuvTex) {
 
     grayPixOld          = true;
     rgbPixOld           = true;
@@ -28,8 +28,8 @@ ofxBlackmagicGrabber::ofxBlackmagicGrabber()
     bUseTexture         = true;
     bUsingDefaultTexMode = true;
 
-    currentOfPixelFormat    = OF_PIXELS_BGRA;
-    currentTexFormat        = OF_BLACKMAGIC_BGRA;
+    currentOfPixelFormat    = OF_PIXELS_MONO;
+    currentTexFormat        = OF_BLACKMAGIC_YUV;
 }
 
 ofxBlackmagicGrabber::~ofxBlackmagicGrabber() {
@@ -58,7 +58,8 @@ const vector<ofVideoFormat> ofxBlackmagicGrabber::listDeviceFormats() {
 vector<ofVideoDevice> ofxBlackmagicGrabber::listDevices() {
     vector<ofVideoDevice> devices;
     vector<string> deviceNames = controller.getDeviceNameList();
-
+    
+    ofLog() << "DEVICE COUNT: " << controller.getDeviceCount();
     for (int i = 0; i < controller.getDeviceCount(); ++i) {
         ofVideoDevice device;
         device.id           = i;
@@ -78,7 +79,7 @@ vector<ofVideoDevice> ofxBlackmagicGrabber::listDevices() {
 
 bool ofxBlackmagicGrabber::setDisplayMode(BMDDisplayMode displayMode,
                                           BMDPixelFormat pixelFormat) {
-
+    
     if (displayMode == bmdModeUnknown || !controller.selectDevice(deviceID)) {
         return false;
     }
@@ -125,9 +126,14 @@ bool ofxBlackmagicGrabber::initGrabber(int w, int h, int _framerate,
 
     setTextureFormat(texFormat);
     framerate = _framerate;
+    
+    ofLogError() << "framerate: " << framerate << endl
+                 << "width: " << w << endl
+                 << "height: " << h;
+    
     BMDDisplayMode displayMode = controller.getDisplayMode(w, h, framerate);
     BMDPixelFormat pixelFormat = getBmPixelFormat(texFormat);
-
+    
     return setDisplayMode(displayMode, pixelFormat);
 }
 
@@ -141,14 +147,15 @@ bool ofxBlackmagicGrabber::initGrabber(int w, int h) {
             "want YUV, more efficient grayscale, or less efficient (but more "
             "convenient) RGB or RGBA, then call setTextureFormat beforehand";
     }
+    
+    if (!controller.selectDevice(deviceID)) {
+        return false;
+    }
 
     vector<string> displayModes = controller.getDisplayModeNames();
     ofLogVerbose("ofxBlackmagicGrabber") << "Availabile display modes: " << endl
         << ofToString(displayModes);
 
-    if (!controller.selectDevice(deviceID)) {
-        return false;
-    }
 
     if (framerate == UNSET_FRAMERATE) {
         ofLogNotice("ofxBlackmagicGrabber") << "Framerate not set, using the "
@@ -158,7 +165,7 @@ bool ofxBlackmagicGrabber::initGrabber(int w, int h) {
         // get the displayMode with highest available framerate
         BMDDisplayMode displayMode = controller.getDisplayMode(w, h);
         BMDPixelFormat pixelFormat = getBmPixelFormat(currentTexFormat);
-
+        
         return setDisplayMode(displayMode, pixelFormat);
     }
 
@@ -397,7 +404,26 @@ ofTexture& ofxBlackmagicGrabber::getBgraTexture() {
 }
 
 ofTexture& ofxBlackmagicGrabber::getCurrentTexture() {
-    return getCurrentTexture();
+    switch (currentTexFormat) {
+        case OF_BLACKMAGIC_YUV:
+            return getYuvTexture();
+            break;
+        case OF_BLACKMAGIC_GRAY:
+            return getYuvTexture();
+            break;
+        case OF_BLACKMAGIC_RGB:
+            return getRgbTexture();
+            break;
+        case OF_BLACKMAGIC_RGBA:
+            return getRgbaTexture();
+            break;
+        case OF_BLACKMAGIC_BGRA:
+            return getBgraTexture();
+            break;
+        default:
+            return getYuvTexture();
+            break;
+    }
 }
 
 ofTexture* ofxBlackmagicGrabber::getTexture() {
@@ -405,6 +431,7 @@ ofTexture* ofxBlackmagicGrabber::getTexture() {
 }
 
 void ofxBlackmagicGrabber::draw(float x, float y) {
+    ofLog() << "draw";
     getCurrentTexture().draw(x, y);
 }
 

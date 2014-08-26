@@ -24,7 +24,7 @@ public:
     bool                            initGrabber(int w, int h);
     bool                            initGrabber(int w, int h, int framerate,
                                                 ofxBlackmagicTexFormat texFormat
-                                                    = OF_BLACKMAGIC_BGRA);
+                                                    = OF_BLACKMAGIC_YUV);
                                         // e.g. 2997 for 29.97fps
                                         // 30 or 3000 for 30fps
 

@@ -80,7 +80,7 @@ bool DeckLinkController::selectDevice(int index)  {
 	IDeckLinkDisplayModeIterator* displayModeIterator = NULL;
 	IDeckLinkDisplayMode* displayMode = NULL;
 	bool result = false;
-	
+    
 	// Check index
 	if (index >= deviceList.size()) {
 		ofLogError("DeckLinkController") << "This application was unable to select the device.";
@@ -108,8 +108,9 @@ bool DeckLinkController::selectDevice(int index)  {
 	//
 	// Retrieve and cache mode list
 	if (deckLinkInput->GetDisplayModeIterator(&displayModeIterator) == S_OK) {
-		while (displayModeIterator->Next(&displayMode) == S_OK)
+		while (displayModeIterator->Next(&displayMode) == S_OK) {
 			modeList.push_back(displayMode);
+        }
 		
 		displayModeIterator->Release();
 	}
@@ -134,7 +135,8 @@ bail:
 const vector<string> DeckLinkController::getDisplayModeNames()  {
 	vector<string> modeNames;
 	vector<DisplayModeInfo> modeInfos = getDisplayModeInfoList();
-
+    
+    ofLogError() << "modeinfos size: " << modeInfos.size();
     typedef vector<DisplayModeInfo>::size_type vec_dm_sz;
 	for (vec_dm_sz modeIndex = 0; modeIndex < modeInfos.size(); modeIndex++) {
 		modeNames.push_back(modeInfos[modeIndex].name);
@@ -176,7 +178,9 @@ const DisplayModeInfo DeckLinkController::getDisplayModeInfo(int modeIndex) {
 
 const vector<DisplayModeInfo> DeckLinkController::getDisplayModeInfoList() {
 	vector<DisplayModeInfo> modeInfos;
-
+    
+    ofLogError() << "modelist size: " << modeList.size();
+    
 	typedef vector<IDeckLinkDisplayMode*>::size_type vec_mode_sz;
 	for (vec_mode_sz modeIndex = 0; modeIndex < modeList.size(); modeIndex++) {
 		modeInfos.push_back(getDisplayModeInfo(modeIndex));
